@@ -1,0 +1,14 @@
+# ── Dev Profile ────────────────────────────────────────────────────────────
+# Activated with: --spring.profiles.active=dev  or  SPRING_PROFILES_ACTIVE=dev
+# Overrides only the properties that should differ in local development.
+
+spring:
+  jpa:
+    show-sql: true   # Print SQL to console during development
+
+logging:
+  level:
+    com.vaultpay: DEBUG               # See all debug logs from our code
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG          # See the actual SQL queries
+    org.hibernate.type.descriptor.sql: TRACE  # See bind parameter values

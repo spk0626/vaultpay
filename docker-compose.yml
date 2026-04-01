@@ -1,0 +1,78 @@
+version: '3.9'
+
+# This spins up all the infrastructure VaultPay needs to run locally.
+# To start everything: docker compose up -d
+# To stop everything:  docker compose down
+
+services:
+
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: vaultpay-postgres
+    environment:
+      POSTGRES_DB: vaultpay
+      POSTGRES_USER: vaultpay
+      POSTGRES_PASSWORD: vaultpay
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persist data between container restarts
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U vaultpay" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: vaultpay-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── RabbitMQ ───────────────────────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: vaultpay-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"   # Management UI → http://localhost:15672  (guest / guest)
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── VaultPay Application ───────────────────────────────────────────────────
+  app:
+    build: .
+    container_name: vaultpay-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/vaultpay
+      DB_USERNAME: vaultpay
+      DB_PASSWORD: vaultpay
+      REDIS_HOST: redis
+      RABBITMQ_HOST: rabbitmq
+      # ⚠ Need to replace this with a real secret in production (I should use a secrets manager)
+      JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  postgres_data:

@@ -1,0 +1,79 @@
+spring:
+  application:
+    name: vaultpay
+
+  # ── Database ─────────────────────────────────────────────────────────────
+  datasource:
+    # ${VARIABLE:default} means "use env var VARIABLE, fall back to default"
+    url: jdbc:postgresql://localhost:5432/vaultpay
+    username: ${DB_USERNAME:vaultpay}
+    password: ${DB_PASSWORD:vaultpay}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: VaultPayPool
+      maximum-pool-size: 10        # Max concurrent DB connections
+      minimum-idle: 2              # Keep at least 2 connections warm
+      connection-timeout: 30000    # Wait up to 30s for a connection before throwing
+
+  jpa:
+    # NEVER use create, create-drop, or update in production.
+    # 'validate' to ensure the schema matches entities — Flyway manages all schema changes.
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 20   # Helps with N+1 queries
+
+  # ── Flyway ────────────────────────────────────────────────────────────────
+  flyway:
+    enabled: true
+    baseline-on-migrate: true   # Needed if DB already exists without Flyway history
+    locations: classpath:db/migration
+
+  # ── Redis ─────────────────────────────────────────────────────────────────
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+
+  # ── RabbitMQ ──────────────────────────────────────────────────────────────
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+# ── Application-Specific Config ────────────────────────────────────────────
+app:
+  jwt:
+    # ⚠ In production: override via environment variable or a secrets manager (AWS Secrets Manager, Vault, etc.)
+    # Generate a strong secret: openssl rand -base64 64
+    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}   # 24 hours in milliseconds
+
+# ── Actuator ──────────────────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ── OpenAPI / Swagger ──────────────────────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+# ── Logging ───────────────────────────────────────────────────────────────
+logging:
+  level:
+    com.vaultpay: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
