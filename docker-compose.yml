@@ -11,9 +11,9 @@ services:
     image: postgres:16-alpine
     container_name: vaultpay-postgres
     environment:
-      POSTGRES_DB: vaultpay
-      POSTGRES_USER: vaultpay
-      POSTGRES_PASSWORD: vaultpay
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:

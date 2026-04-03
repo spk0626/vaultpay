@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Redis-backed API rate limiter using a fixed-window counter per user per minute.
+ * This is Redis-backed API rate limiter using a fixed-window counter per user per minute.
  *
  * DESIGN:
  *   Key format: rate_limit:{userEmail}:{YYYY-MM-DDTHH:mm}
@@ -29,7 +29,7 @@ import java.time.format.DateTimeFormatter;
  *
  * LIMIT: 60 requests per user per minute for the /api/ endpoints.
  *
- * WHY THIS MATTERS FOR FINTECH:
+ * WHY THIS MATTERS:
  *   Without rate limiting, a single compromised account could spam thousands of
  *   transfer requests per second. This provides a lightweight defense layer.
  *
