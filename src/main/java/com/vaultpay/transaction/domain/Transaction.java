@@ -57,11 +57,11 @@ public class Transaction extends Auditable {
     private UUID counterpartyId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false, length = 32, updatable = false)
     private TransactionType type;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 32)
     private TransactionStatus status;
 
     /** Amount in cents. Always positive — the type (TRANSFER_OUT vs IN) indicates direction. */

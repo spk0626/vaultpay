@@ -64,7 +64,7 @@ public class DomainEvent {
     private String payload;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 32)
     private EventStatus status;
 
     @CreatedDate

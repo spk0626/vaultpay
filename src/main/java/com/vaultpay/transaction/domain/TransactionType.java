@@ -12,7 +12,7 @@ package com.vaultpay.transaction.domain;
  *   one TRANSFER_OUT on the sender's wallet, one TRANSFER_IN on the receiver's wallet.
  * This gives each user a complete, accurate ledger of their own wallet activity.
  *
- * Stored as STRING in the DB (matches the PostgreSQL ENUM values in V3 migration).
+ * Stored as STRING in the DB and constrained by versioned Flyway migrations.
  */
 public enum TransactionType {
     DEPOSIT,

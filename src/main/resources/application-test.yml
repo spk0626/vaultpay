@@ -1,0 +1,22 @@
+# Test profile — used when SPRING_PROFILES_ACTIVE=test
+# Testcontainers overrides the datasource/redis/rabbitmq URLs at runtime via @DynamicPropertySource.
+# These values here are placeholders; they're always overridden in integration tests.
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+
+  flyway:
+    enabled: true
+
+app:
+  jwt:
+    secret: 513E635266556A586E3272357548963F413F4428472B4B6250645367566B5258
+    expiration-ms: 3600000  # 1 hour for tests
+
+logging:
+  level:
+    com.vaultpay: DEBUG
+    org.springframework.security: WARN
