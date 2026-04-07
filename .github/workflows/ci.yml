@@ -28,6 +28,9 @@ jobs:
           distribution: temurin
           cache: maven
 
+      - name: Ensure Maven wrapper is executable
+        run: chmod +x ./mvnw
+
       - name: Compile project
         run: ./mvnw -B compile
 
