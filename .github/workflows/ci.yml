@@ -28,6 +28,12 @@ jobs:
           distribution: temurin
           cache: maven
 
+      - name: Validate Maven wrapper files
+        run: |
+          test -f ./mvnw || (echo "Missing mvnw" && exit 1)
+          test -f ./.mvn/wrapper/maven-wrapper.properties || (echo "Missing .mvn/wrapper/maven-wrapper.properties" && exit 1)
+          chmod +x ./mvnw
+
       - name: Ensure Maven wrapper is executable
         run: chmod +x ./mvnw
 

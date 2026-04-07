@@ -33,7 +33,6 @@ build/
 .vscode/
 
 ### Maven ###
-.mvn/wrapper/maven-wrapper.properties
 
 ### OS ###
 .DS_Store
