@@ -4,6 +4,8 @@ import jakarta.persistence.*;     // persistence is the java standard for mappin
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -60,6 +62,7 @@ public class DomainEvent {
     private String eventType;
 
     /** JSON payload — serialized by TransactionService, deserialized by NotificationListener */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb", nullable = false, updatable = false)
     private String payload;
 

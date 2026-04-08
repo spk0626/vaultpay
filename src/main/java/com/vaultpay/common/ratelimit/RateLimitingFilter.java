@@ -65,22 +65,26 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         String windowKey  = LocalDateTime.now().format(MINUTE_FORMATTER);
         String redisKey   = "rate_limit:" + userEmail + ":" + windowKey;
 
-        // INCR is atomic in Redis — safe for concurrent requests from the same user
-        Long requestCount = redisTemplate.opsForValue().increment(redisKey);
+        try {
+            // INCR is atomic in Redis — safe for concurrent requests from the same user
+            Long requestCount = redisTemplate.opsForValue().increment(redisKey);
 
-        // Set TTL on the first request of the window (subsequent INCRs won't reset the TTL)
-        if (requestCount != null && requestCount == 1) {
-            redisTemplate.expire(redisKey, Duration.ofMinutes(2));
-        }
+            // Set TTL on the first request of the window (subsequent INCRs won't reset the TTL)
+            if (requestCount != null && requestCount == 1) {
+                redisTemplate.expire(redisKey, Duration.ofMinutes(2));
+            }
 
-        if (requestCount != null && requestCount > MAX_REQUESTS_PER_MINUTE) {
-            log.warn("Rate limit exceeded for user: {}", userEmail);
-            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.getWriter().write("""
-                    {"status":429,"detail":"Too many requests. Please slow down."}
-                    """);
-            return;
+            if (requestCount != null && requestCount > MAX_REQUESTS_PER_MINUTE) {
+                log.warn("Rate limit exceeded for user: {}", userEmail);
+                response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                response.getWriter().write("""
+                        {"status":429,"detail":"Too many requests. Please slow down."}
+                        """);
+                return;
+            }
+        } catch (Exception e) {
+            log.warn("Rate limiting unavailable for user {} - allowing request: {}", userEmail, e.getMessage());
         }
 
         filterChain.doFilter(request, response);
