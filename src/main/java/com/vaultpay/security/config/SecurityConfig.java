@@ -20,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * The central Spring Security configuration.
@@ -41,18 +42,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration                          // Marks this class as a source of bean definitions for the application context. Spring will scan this class for @Bean methods and register them as beans in the context.
 @EnableWebSecurity                 // Enables Spring Security's web security support and provides the Spring MVC integration. This is required to activate Spring Security in our web application.
 @EnableMethodSecurity          // Enables @PreAuthorize on controller methods. We use this to restrict access to certain endpoints based on user roles/permissions.
-@RequiredArgsConstructor     // Lombok annotation to generate a constructor for all final fields (like jwtAuthFilter, rateLimitingFilter, userDetailsService). This allows us to use constructor injection for these dependencies.
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthFilter;
-    private final RateLimitingFilter      rateLimitingFilter;
-    private final UserDetailsService      userDetailsService;
-
     @Bean                                                                                           // Beans are the building blocks of Spring applications. This method defines a bean of type SecurityFilterChain, which configures how HTTP security works in our application.
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   JwtAuthenticationFilter jwtAuthFilter,
+                                                   RateLimitingFilter rateLimitingFilter,
+                                                   AuthenticationProvider authenticationProvider) throws Exception {
         http
             // Disable CSRF — not needed for stateless JWT APIs
             .csrf(AbstractHttpConfigurer::disable)
+
+            .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, authException) ->
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
+            ))
 
             // Authorization rules
             .authorizeHttpRequests(auth -> auth
@@ -78,7 +81,7 @@ public class SecurityConfig {
             )
 
             // to Wire our custom authentication logic using the our method authenticationProvider() below
-            .authenticationProvider(authenticationProvider())
+            .authenticationProvider(authenticationProvider)
  
             // Add JWT filter BEFORE Spring's default username/password filter.
             // Our filter runs first, sets Authentication if JWT is valid, and Spring's filter is then a no-op (already authenticated).
@@ -100,7 +103,7 @@ public class SecurityConfig {
      * Spring calls this during login to: load the user, then verify the password hash.
      */
     @Bean
-    public AuthenticationProvider authenticationProvider() {
+    public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();   // deprecated in Spring Security 6.0, but says it still works. 
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());  

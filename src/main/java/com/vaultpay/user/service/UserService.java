@@ -9,6 +9,7 @@ import com.vaultpay.user.repository.UserRepository;
 import com.vaultpay.wallet.service.WalletService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -45,7 +46,7 @@ public class UserService implements UserDetailsService {
     private final WalletService      walletService;
     private final PasswordEncoder    passwordEncoder;
     private final JwtService         jwtService;
-    private final AuthenticationManager authenticationManager;
+    private final ObjectProvider<AuthenticationManager> authenticationManagerProvider;
     private final UserMapper         userMapper;
 
     /**
@@ -85,6 +86,7 @@ public class UserService implements UserDetailsService {
      */
     public UserDtos.AuthResponse login(UserDtos.LoginRequest request) {
         // This single call does all the heavy lifting
+        AuthenticationManager authenticationManager = authenticationManagerProvider.getObject();
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
